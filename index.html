@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Elixir Progress Bar</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Press+Start+2P&display=swap');
@@ -10,6 +10,7 @@
         :root {
             --bg-mystical: linear-gradient(135deg, #2b1055, #7597de);
             --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-border-active: #ff4757; /* Red glow when holding */
             --elixir-color: #ffd700;
             --elixir-glow: #ffae00;
             --btn-red: #ff4757;
@@ -19,20 +20,24 @@
 
         body {
             margin: 0;
-            height: 100vh;
+            /* Changed from height: 100vh to min-height to allow scrolling on small phones */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background: var(--bg-mystical);
             font-family: 'Fredoka One', cursive;
-            overflow: hidden;
+            overflow-x: hidden; /* Only hide horizontal scroll */
+            overflow-y: auto;   /* Allow vertical scroll if needed */
             user-select: none;
+            -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile tap */
+            padding: 20px 0; /* Add padding for vertical spacing */
         }
 
         /* --- Background Animation --- */
         .stars {
-            position: absolute;
+            position: fixed; /* Fixed so it doesn't scroll away */
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: 
                 radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
@@ -62,6 +67,15 @@
             backdrop-filter: blur(5px);
             margin-bottom: 40px;
             z-index: 10;
+            cursor: pointer; /* Shows it's interactive */
+            transition: border-color 0.3s, transform 0.2s;
+        }
+
+        /* Visual feedback when holding the capsule */
+        .capsule-container.holding {
+            border-color: var(--glass-border-active);
+            transform: scale(0.98);
+            box-shadow: 0 0 30px var(--glass-border-active);
         }
 
         .capsule-container::after {
@@ -71,6 +85,7 @@
             background: rgba(255, 255, 255, 0.4);
             border-radius: 50px;
             z-index: 12;
+            pointer-events: none; /* Let clicks pass through reflection */
         }
 
         .liquid {
@@ -80,6 +95,7 @@
             box-shadow: 0 0 40px var(--elixir-glow);
             transition: height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 5;
+            pointer-events: none; /* Ensure clicks hit the capsule container */
         }
 
         .liquid::before {
@@ -97,6 +113,7 @@
             position: absolute; width: 100%; text-align: center;
             top: 50%; transform: translateY(-50%);
             mix-blend-mode: overlay;
+            pointer-events: none;
         }
 
         /* --- Controls --- */
@@ -133,17 +150,18 @@
             margin-top: 30px; color: rgba(255,255,255,0.6);
             font-size: 0.9rem; cursor: pointer; transition: color 0.3s;
             z-index: 20;
+            padding-bottom: 20px; /* Extra padding for mobile scroll */
         }
         .secret-area:hover { color: white; }
 
         /* --- The Modal Overlay --- */
         .modal-overlay {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
-            z-index: 1000; /* Way above everything */
+            z-index: 1000;
             align-items: center;
             justify-content: center;
             animation: fadeIn 0.3s;
@@ -183,7 +201,6 @@
             margin-bottom: 20px;
         }
 
-        /* Remove arrows from number input */
         .magic-input::-webkit-outer-spin-button,
         .magic-input::-webkit-inner-spin-button {
             -webkit-appearance: none; margin: 0;
@@ -246,7 +263,7 @@
 
     <div class="stars"></div>
 
-    <div class="capsule-container">
+    <div class="capsule-container" id="main-capsule">
         <div class="percentage-text" id="percent-display">0%</div>
         <div class="liquid" id="liquid-bar"></div>
     </div>
@@ -282,19 +299,18 @@
 
     <script>
         // --- DATA PERSISTENCE ---
-        // Try to load saved level from local browser storage, otherwise 0
         let currentProgress = parseInt(localStorage.getItem('savedMagicLevel')) || 0;
         
         const liquidBar = document.getElementById('liquid-bar');
         const percentDisplay = document.getElementById('percent-display');
         const secretBtn = document.getElementById('secret-btn');
+        const capsuleContainer = document.getElementById('main-capsule');
         const modalOverlay = document.getElementById('modal-overlay');
         const manualInput = document.getElementById('manual-input');
         
         const phrases = ["YAYYYY!!!", "HURRAYYYYY!!!", "YOU ARE AWESOME", "EPIC!", "LEGENDARY!", "LEVEL UP!", "WOOHOO!"];
         const colors = ['#ffeb3b', '#ff4757', '#2ed573', '#1e90ff', '#ffa502'];
 
-        // Run this immediately to show saved progress
         updateUI();
 
         // --- Core UI Updates ---
@@ -302,7 +318,6 @@
             if (currentProgress > 100) currentProgress = 100;
             if (currentProgress < 0) currentProgress = 0;
             
-            // Save the new progress to browser memory
             localStorage.setItem('savedMagicLevel', currentProgress);
 
             liquidBar.style.height = `${currentProgress}%`;
@@ -366,17 +381,21 @@
             }
         }
 
-        // --- Long Press & Modal Logic ---
+        // --- Long Press Logic (Shared) ---
         let pressTimer;
 
-        // Listeners for Secret Button
-        secretBtn.addEventListener('mousedown', startPress);
-        secretBtn.addEventListener('mouseup', cancelPress);
-        secretBtn.addEventListener('mouseleave', cancelPress);
-        secretBtn.addEventListener('touchstart', startPress);
-        secretBtn.addEventListener('touchend', cancelPress);
+        // Apply to both the Text Button AND the Capsule
+        const triggers = [secretBtn, capsuleContainer];
 
-        // Listen for "Enter" key in the input box
+        triggers.forEach(trigger => {
+            trigger.addEventListener('mousedown', (e) => startPress(e, trigger));
+            trigger.addEventListener('mouseup', () => cancelPress(trigger));
+            trigger.addEventListener('mouseleave', () => cancelPress(trigger));
+            trigger.addEventListener('touchstart', (e) => startPress(e, trigger));
+            trigger.addEventListener('touchend', () => cancelPress(trigger));
+        });
+
+        // Listen for "Enter" key
         manualInput.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
@@ -384,27 +403,47 @@
             }
         });
 
-        function startPress(e) {
-            if(e.type === 'touchstart') e.preventDefault();
-            secretBtn.style.color = "#ff4757"; 
+        function startPress(e, element) {
+            // Prevent scrolling/context menu on hold
+            if(e.type === 'touchstart') {
+                // We only prevent default if it's the capsule, to avoid blocking scroll on text
+                // But generally for long press UI it's safer to not block scroll unless necessary.
+                // However, for the 'capsule' we want to stop zooming or context menu
+                // e.preventDefault(); 
+            }
+            
+            // Visual feedback
+            if(element === secretBtn) {
+                element.style.color = "#ff4757"; 
+            } else if (element === capsuleContainer) {
+                element.classList.add('holding');
+            }
             
             pressTimer = setTimeout(() => {
                 // Open Modal
-                modalOverlay.style.display = 'flex'; // Use flex to center
-                manualInput.value = ''; // Clear previous
-                manualInput.focus(); // Auto focus cursor
-                secretBtn.innerText = "Secret Unlocked!";
-            }, 1000);
+                openModal();
+                // Reset feedback
+                if(element === secretBtn) element.innerText = "Secret Unlocked!";
+                if(element === capsuleContainer) element.classList.remove('holding');
+            }, 1000); // 1 second hold
         }
 
-        function cancelPress() {
+        function cancelPress(element) {
             clearTimeout(pressTimer);
-            secretBtn.style.color = "rgba(255,255,255,0.6)";
+            if(element === secretBtn) element.style.color = "rgba(255,255,255,0.6)";
+            if(element === capsuleContainer) element.classList.remove('holding');
+        }
+
+        function openModal() {
+            modalOverlay.style.display = 'flex';
+            manualInput.value = '';
+            manualInput.focus();
         }
 
         function closeModal() {
             modalOverlay.style.display = 'none';
             secretBtn.innerText = "hold to recover magic";
+            capsuleContainer.classList.remove('holding');
         }
 
         function setManualProgress() {
