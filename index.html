@@ -14,6 +14,7 @@
             --elixir-glow: #ffae00;
             --btn-red: #ff4757;
             --btn-shadow: #c0392b;
+            --modal-bg: linear-gradient(180deg, #4834d4, #686de0);
         }
 
         body {
@@ -51,7 +52,7 @@
         /* --- The Glass Capsule --- */
         .capsule-container {
             position: relative;
-            width: 300px; /* Vertical capsule */
+            width: 300px;
             height: 500px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 100px;
@@ -63,14 +64,10 @@
             z-index: 10;
         }
 
-        /* Shine reflection on glass */
         .capsule-container::after {
             content: '';
             position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 30px;
-            height: 150px;
+            top: 20px; left: 20px; width: 30px; height: 150px;
             background: rgba(255, 255, 255, 0.4);
             border-radius: 50px;
             z-index: 12;
@@ -78,29 +75,18 @@
 
         .liquid {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0%; /* Starts empty */
+            bottom: 0; left: 0; width: 100%; height: 0%;
             background: var(--elixir-color);
             box-shadow: 0 0 40px var(--elixir-glow);
             transition: height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 5;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        /* Bubbles/Wave effect on top of liquid */
         .liquid::before {
             content: '';
-            position: absolute;
-            top: -10px;
-            width: 100%;
-            height: 20px;
+            position: absolute; top: -10px; width: 100%; height: 20px;
             background: var(--elixir-color);
-            border-radius: 50%;
-            opacity: 0.8;
+            border-radius: 50%; opacity: 0.8;
         }
 
         .percentage-text {
@@ -108,113 +94,146 @@
             color: #fff;
             text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
             z-index: 15;
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 50%;
-            transform: translateY(-50%);
+            position: absolute; width: 100%; text-align: center;
+            top: 50%; transform: translateY(-50%);
             mix-blend-mode: overlay;
         }
 
         /* --- Controls --- */
         .control-panel {
-            display: flex;
-            align-items: flex-end;
-            gap: 20px;
-            z-index: 20;
+            display: flex; align-items: flex-end; gap: 20px; z-index: 20;
         }
 
         .push-btn-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
         }
 
         .push-btn {
             background-color: var(--btn-red);
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
+            border: none; border-radius: 50%; cursor: pointer;
             box-shadow: 0 8px 0 var(--btn-shadow), 0 15px 20px rgba(0,0,0,0.2);
-            transition: all 0.1s;
-            position: relative;
-            top: 0;
+            transition: all 0.1s; position: relative; top: 0;
+            outline: none;
         }
 
         .push-btn:active {
-            top: 8px;
-            box-shadow: 0 0 0 var(--btn-shadow), 0 0px 0px rgba(0,0,0,0.2);
+            top: 8px; box-shadow: 0 0 0 var(--btn-shadow), 0 0px 0px rgba(0,0,0,0.2);
         }
 
-        /* Button Sizes based on power */
         .btn-sm { width: 50px; height: 50px; }
         .btn-md { width: 70px; height: 70px; }
         .btn-lg { width: 90px; height: 90px; }
 
         .btn-label {
-            color: white;
-            font-size: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: white; font-size: 1rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* --- Secret Restore Button --- */
+        /* --- Secret Area --- */
         .secret-area {
-            margin-top: 30px;
-            color: rgba(255,255,255,0.6);
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: color 0.3s;
-            position: relative;
+            margin-top: 30px; color: rgba(255,255,255,0.6);
+            font-size: 0.9rem; cursor: pointer; transition: color 0.3s;
+            z-index: 20;
         }
         .secret-area:hover { color: white; }
 
-        /* Secret Input Modal */
-        #manual-input-container {
-            display: none;
-            position: absolute;
-            bottom: 80px;
-            background: #fff;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: popIn 0.3s ease;
+        /* --- The Modal Overlay --- */
+        .modal-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000; /* Way above everything */
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
         }
-        @keyframes popIn { from{transform: scale(0);} to{transform: scale(1);} }
 
-        #manual-input {
-            border: 2px solid #ccc;
-            padding: 5px;
-            border-radius: 5px;
-            width: 60px;
+        /* --- The Modal Box --- */
+        .modal-box {
+            background: var(--modal-bg);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #fff;
+            box-shadow: 0 0 30px rgba(72, 52, 212, 0.8);
             text-align: center;
-            font-family: inherit;
+            animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 90%;
+            width: 350px;
         }
 
-        /* --- Effects (Glitter & Text) --- */
+        .modal-title {
+            color: #fff;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        .magic-input {
+            width: 80%;
+            background: rgba(0,0,0,0.2);
+            border: none;
+            border-bottom: 4px solid #ffd700;
+            color: #ffd700;
+            font-size: 2.5rem;
+            font-family: 'Fredoka One', cursive;
+            text-align: center;
+            outline: none;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Remove arrows from number input */
+        .magic-input::-webkit-outer-spin-button,
+        .magic-input::-webkit-inner-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+
+        .set-btn {
+            background: #2ed573;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #218c74;
+            transition: transform 0.1s;
+        }
+        .set-btn:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+        
+        .close-btn {
+            margin-top: 15px;
+            display: block;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: white; }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        @keyframes popUp { from{transform: scale(0.5);} to{transform: scale(1);} }
+
         .particle {
-            position: absolute;
-            pointer-events: none;
+            position: absolute; pointer-events: none;
             animation: floatUp 1s ease-out forwards;
         }
-
         .pop-text {
-            position: absolute;
-            color: #fff;
-            font-family: 'Press Start 2P', cursive; /* Retro game font */
-            font-size: 1.5rem;
-            text-shadow: 3px 3px 0 #000;
-            pointer-events: none;
-            white-space: nowrap;
-            animation: textFloat 1.2s ease-out forwards;
-            z-index: 100;
+            position: absolute; color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem; text-shadow: 3px 3px 0 #000;
+            pointer-events: none; white-space: nowrap;
+            animation: textFloat 1.2s ease-out forwards; z-index: 100;
         }
-
         @keyframes floatUp {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
             100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
         }
-
         @keyframes textFloat {
             0% { transform: scale(0.5) translateY(0); opacity: 0; }
             50% { transform: scale(1.2) translateY(-50px); opacity: 1; }
@@ -237,12 +256,10 @@
             <button class="push-btn btn-sm" onclick="addProgress(1, event)"></button>
             <span class="btn-label">+1%</span>
         </div>
-
         <div class="push-btn-container">
             <button class="push-btn btn-md" onclick="addProgress(5, event)"></button>
             <span class="btn-label">+5%</span>
         </div>
-
         <div class="push-btn-container">
             <button class="push-btn btn-lg" onclick="addProgress(10, event)"></button>
             <span class="btn-label">+10%</span>
@@ -253,31 +270,44 @@
         hold to recover magic
     </div>
     
-    <div id="manual-input-container">
-        <input type="number" id="manual-input" placeholder="0-100">
-        <button onclick="setManualProgress()">Set</button>
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">✨ RESTORE MANA ✨</div>
+            <input type="number" class="magic-input" id="manual-input" placeholder="0-100" min="0" max="100">
+            <br>
+            <button class="set-btn" onclick="setManualProgress()">SET LEVEL</button>
+            <span class="close-btn" onclick="closeModal()">cancel</span>
+        </div>
     </div>
 
     <script>
-        let currentProgress = 0;
+        // --- DATA PERSISTENCE ---
+        // Try to load saved level from local browser storage, otherwise 0
+        let currentProgress = parseInt(localStorage.getItem('savedMagicLevel')) || 0;
+        
         const liquidBar = document.getElementById('liquid-bar');
         const percentDisplay = document.getElementById('percent-display');
         const secretBtn = document.getElementById('secret-btn');
-        const manualContainer = document.getElementById('manual-input-container');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const manualInput = document.getElementById('manual-input');
         
-        // Fun phrases
         const phrases = ["YAYYYY!!!", "HURRAYYYYY!!!", "YOU ARE AWESOME", "EPIC!", "LEGENDARY!", "LEVEL UP!", "WOOHOO!"];
         const colors = ['#ffeb3b', '#ff4757', '#2ed573', '#1e90ff', '#ffa502'];
 
-        // --- Core Logic ---
+        // Run this immediately to show saved progress
+        updateUI();
+
+        // --- Core UI Updates ---
         function updateUI() {
             if (currentProgress > 100) currentProgress = 100;
             if (currentProgress < 0) currentProgress = 0;
             
+            // Save the new progress to browser memory
+            localStorage.setItem('savedMagicLevel', currentProgress);
+
             liquidBar.style.height = `${currentProgress}%`;
             percentDisplay.innerText = `${currentProgress}%`;
 
-            // Change liquid color slightly as it gets full
             if(currentProgress === 100) {
                 liquidBar.style.background = "#fff200";
                 liquidBar.style.boxShadow = "0 0 60px #fff200";
@@ -288,15 +318,12 @@
 
         function addProgress(amount, event) {
             if (currentProgress >= 100) return;
-
             currentProgress += amount;
             updateUI();
             
-            // Trigger effects
             const rect = event.target.getBoundingClientRect();
             const x = rect.left + rect.width / 2;
             const y = rect.top;
-
             spawnConfetti(x, y);
             spawnText(x, y - 50);
         }
@@ -306,15 +333,10 @@
             const textEl = document.createElement('div');
             textEl.classList.add('pop-text');
             textEl.innerText = phrases[Math.floor(Math.random() * phrases.length)];
-            
-            // Randomize position slightly
             const randomX = (Math.random() - 0.5) * 100;
             textEl.style.left = `${x + randomX}px`;
             textEl.style.top = `${y}px`;
-            
-            // Random color for text
             textEl.style.color = colors[Math.floor(Math.random() * colors.length)];
-
             document.body.appendChild(textEl);
             setTimeout(() => textEl.remove(), 1200);
         }
@@ -323,59 +345,54 @@
             for (let i = 0; i < 20; i++) {
                 const p = document.createElement('div');
                 p.classList.add('particle');
-                
-                // Random Shape (square or circle)
                 const size = Math.random() * 10 + 5;
                 p.style.width = `${size}px`;
                 p.style.height = `${size}px`;
                 p.style.background = colors[Math.floor(Math.random() * colors.length)];
                 p.style.borderRadius = Math.random() > 0.5 ? '50%' : '0%';
-                
-                // Start position
                 p.style.left = `${x}px`;
                 p.style.top = `${y}px`;
+                
+                const velocityX = (Math.random() - 0.5) * 200;
+                const velocityY = Math.random() * -200 - 50;
 
-                // Physics
-                const velocityX = (Math.random() - 0.5) * 200; // Spread L/R
-                const velocityY = Math.random() * -200 - 50;   // Upward force
-
-                // Apply dynamic animation via JS because physics are random
                 p.animate([
                     { transform: `translate(0, 0)`, opacity: 1 },
                     { transform: `translate(${velocityX}px, ${velocityY}px) rotate(${Math.random()*360}deg)`, opacity: 0 }
-                ], {
-                    duration: 1000,
-                    easing: 'cubic-bezier(0, .9, .57, 1)',
-                    fill: 'forwards'
-                });
+                ], { duration: 1000, easing: 'cubic-bezier(0, .9, .57, 1)', fill: 'forwards' });
 
                 document.body.appendChild(p);
                 setTimeout(() => p.remove(), 1000);
             }
         }
 
-        // --- Long Press Logic ---
+        // --- Long Press & Modal Logic ---
         let pressTimer;
 
-        // Mouse events
+        // Listeners for Secret Button
         secretBtn.addEventListener('mousedown', startPress);
         secretBtn.addEventListener('mouseup', cancelPress);
         secretBtn.addEventListener('mouseleave', cancelPress);
-
-        // Touch events (for mobile)
         secretBtn.addEventListener('touchstart', startPress);
         secretBtn.addEventListener('touchend', cancelPress);
 
+        // Listen for "Enter" key in the input box
+        manualInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                setManualProgress();
+            }
+        });
+
         function startPress(e) {
-            // Prevent default to stop scrolling/selecting on mobile
             if(e.type === 'touchstart') e.preventDefault();
-            
-            secretBtn.style.color = "#ff4757"; // Visual feedback
+            secretBtn.style.color = "#ff4757"; 
             
             pressTimer = setTimeout(() => {
-                // Action after 1.5 seconds
-                manualContainer.style.display = 'block';
-                manualContainer.style.left = (secretBtn.getBoundingClientRect().left) + 'px';
+                // Open Modal
+                modalOverlay.style.display = 'flex'; // Use flex to center
+                manualInput.value = ''; // Clear previous
+                manualInput.focus(); // Auto focus cursor
                 secretBtn.innerText = "Secret Unlocked!";
             }, 1000);
         }
@@ -385,13 +402,17 @@
             secretBtn.style.color = "rgba(255,255,255,0.6)";
         }
 
+        function closeModal() {
+            modalOverlay.style.display = 'none';
+            secretBtn.innerText = "hold to recover magic";
+        }
+
         function setManualProgress() {
-            const inputVal = document.getElementById('manual-input').value;
+            const inputVal = manualInput.value;
             if(inputVal !== "") {
                 currentProgress = parseInt(inputVal);
                 updateUI();
-                manualContainer.style.display = 'none';
-                secretBtn.innerText = "hold to recover magic";
+                closeModal();
             }
         }
     </script>
