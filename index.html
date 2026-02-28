@@ -459,6 +459,89 @@
                 closeModal();
             }
         }
+
+
+        /* =========================================================
+   KEYBOARD CONTROL SYSTEM (FIXED + ROBUST)
+   ========================================================= */
+
+let shiftActive = false;
+let shiftBuffer = "";
+
+// Convert keyboard code → number safely
+function getDigitFromEvent(e) {
+    if (e.code.startsWith("Digit")) {
+        return e.code.replace("Digit", "");
+    }
+    if (e.code.startsWith("Numpad")) {
+        return e.code.replace("Numpad", "");
+    }
+    return null;
+}
+
+document.addEventListener("keydown", (e) => {
+
+    // ---- SHIFT DOWN ----
+    if (e.key === "Shift") {
+        shiftActive = true;
+        shiftBuffer = "";
+        return;
+    }
+
+    const digit = getDigitFromEvent(e);
+    if (digit === null) return;
+
+    // -------- SHIFT MODE → SET MANA --------
+    if (shiftActive) {
+
+        shiftBuffer += digit;
+
+        // Special case: 100 allowed
+        if (shiftBuffer === "100") {
+            currentProgress = 100;
+            updateUI();
+            shiftBuffer = "";
+            return;
+        }
+
+        // Keep last two digits only
+        if (shiftBuffer.length > 2) {
+            shiftBuffer = shiftBuffer.slice(-2);
+        }
+
+        const value = parseInt(shiftBuffer);
+
+        if (!isNaN(value)) {
+            currentProgress = value;
+            updateUI();
+        }
+
+    } 
+    // -------- NORMAL MODE → INCREMENT --------
+    else {
+
+        const increment = parseInt(digit);
+
+        if (increment > 0) {
+            const fakeEvent = {
+                target: capsuleContainer
+            };
+
+            addProgress(increment, fakeEvent);
+        }
+    }
+});
+
+// ---- SHIFT RELEASE ----
+document.addEventListener("keyup", (e) => {
+    if (e.key === "Shift") {
+        shiftActive = false;
+        shiftBuffer = "";
+    }
+});
+
+
+
     </script>
 </body>
 </html>
