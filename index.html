@@ -541,7 +541,24 @@ document.addEventListener("keyup", (e) => {
 });
 
 
+/* =========================================================
+   FUNCTION 3 — RESET MANA (0 key + R key)
+   ========================================================= */
 
+document.addEventListener("keydown", (e) => {
+
+    // Normalize key to lowercase
+    const key = e.key.toLowerCase();
+
+    // Reset triggers
+    if (key === "0" || key === "r") {
+        currentProgress = 0;
+        updateUI();
+    }
+
+});
+
+    
     </script>
 </body>
 </html>
